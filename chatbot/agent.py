@@ -1,20 +1,9 @@
 """
-chatbot/agent.py
-================
-The agent loop. The model sees the question and the tool list, and decides for itself which tool
-to call, in what order, and when it has enough to answer. This replaces the old keyword router
-(chatbot/chain/rag_chain.py), which decided the route in code.
-
-    question -> [model: call tool? -> run tool -> result back to model] x N -> answer
-
-Rules built into the loop (not left to the model):
+Current Rules built into the loop (not left to the model):
   * at most MAX_STEPS model calls, so it cannot loop forever
   * a tool that fails returns an error to the model, which can try again; it never crashes the loop
   * every call is recorded in `steps`, so the page can show what the agent did and tests can check it
   * the client is passed in, so the loop is tested with a fake model and no API key
-
-Tools: the data tools in chatbot/tools.py, `what_if_seat` (live model call) and `search_docs`
-(written explanations in chatbot/knowledge_base/docs/, no figures). More can be added with `extra_tools`.
 """
 import json
 import sys
