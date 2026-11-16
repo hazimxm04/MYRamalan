@@ -325,6 +325,11 @@ This part is **not** in the trained model and changes no validated number or fro
 A single tool-using agent: the model chooses which tools to call, in what order, and when it has enough to answer.
 The checks around it run in code, so they do not depend on the model following a prompt.
 
+![How one question moves through the agent: input guardrails, planner, tool loop with scrub, output guardrails, verifier](docs/agent_flow.png)
+
+<sub>Source: `docs/agent_flow.mmd`. Re-render with
+`mmdc -i docs/agent_flow.mmd -o docs/agent_flow.png -w 2000 -b white`.</sub>
+
 | Stage | File | What it does |
 |---|---|---|
 | Input guardrails | `chatbot/guardrails.py` | Blocks off-topic questions and prompt-injection wording before any model call; removes instruction-like text from tool results; checks the answer for leaked configuration. Keyword rules, not injection-proof |

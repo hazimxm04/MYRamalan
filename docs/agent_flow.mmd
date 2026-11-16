@@ -1,0 +1,58 @@
+flowchart LR
+  classDef user fill:#f2eef7,stroke:#9a85b5,color:#2b1f3a
+  classDef guard fill:#fdecec,stroke:#c46b6b,color:#4a1414
+  classDef agent fill:#e8ecfb,stroke:#7384c4,color:#1a2252
+  classDef tool fill:#e3f0e8,stroke:#5f9a76,color:#14301f
+  classDef data fill:#eef2f7,stroke:#8795a8,color:#1b2430
+  classDef box fill:#fbfbfd,stroke:#b9c0cc,color:#44506b
+  classDef stop fill:#fff8e6,stroke:#c9a64a,color:#4a3a0c
+
+  subgraph PRE[" 1. Before the model "]
+    direction TB
+    Q["<b>User question</b>"]
+    IN["<b>check_input</b><br/><small>empty, too long, greeting,<br/>injection wording, off topic</small>"]
+    BL["Fixed reply<br/><small>no model call</small>"]
+    PL["<b>Planner</b> (optional)<br/><small>short plan shown to the user,<br/>ticked off as tools run</small>"]
+    CL["Ask the user to clarify"]
+    Q --> IN
+    IN -- "blocked" --> BL
+    IN -- "allowed" --> PL
+    PL -- "too vague" --> CL
+  end
+
+  subgraph LOOP[" 2. Tool loop (agent.py, at most 6 model calls) "]
+    direction TB
+    M["<b>Model</b><br/><small>answers, or chooses a tool</small>"]
+    R["Run the tool<br/><small>a failure goes back to the<br/>model as an error</small>"]
+    SC["<b>scrub</b><br/><small>instruction-like text removed,<br/>long strings cut</small>"]
+    M -- "tool call" --> R
+    R --> SC
+    SC -- "result" --> M
+  end
+
+  subgraph TOOLS[" 8 read-only tools<br/>(they read the frozen, validated and sentiment files) "]
+    direction TB
+    T1["get_state_forecast, get_seat,<br/>list_flips, compare_last_election"]
+    T2["get_validation, get_sentiment"]
+    T3["what_if_seat<br/><small>re-runs the model for one seat</small>"]
+    T4["search_docs<br/><small>7 method notes, no figures</small>"]
+  end
+
+  subgraph POST[" 3. After the model "]
+    direction TB
+    OUT["<b>check_output</b><br/><small>key-like strings,<br/>copied system prompt</small>"]
+    VR["<b>Verifier</b> (optional)<br/><small>every number and year must<br/>come from a tool result;<br/>one retry</small>"]
+    A["<b>Answer</b> + trace of every step"]
+    OUT -- "ok" --> VR --> A
+  end
+
+  PL -- "plan" --> M
+  R <--> TOOLS
+  M -- "final answer" --> OUT
+
+  class Q,A user
+  class IN,OUT,SC guard
+  class PL,M,R,VR agent
+  class T1,T2,T3,T4 tool
+  class BL,CL stop
+  class PRE,LOOP,TOOLS,POST box
