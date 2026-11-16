@@ -5,9 +5,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sentiment.scoring import score_quality as q
 
 GOOD = """BN: 0.2
@@ -102,7 +102,7 @@ def test_classify_api_error():
 
 def test_resume_skips_only_successful_titles():
     import score_news_file as sf
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
     raw = pd.DataFrame({'title': ['a', 'b', 'c']})
     done = pd.DataFrame({'title': ['a', 'b'], 'scoring_ok': [True, False]})
     assert list(sf.pending(raw, done)['title']) == ['b', 'c']      # failed 'b' is retried

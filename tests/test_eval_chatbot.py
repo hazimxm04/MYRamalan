@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-spec = importlib.util.spec_from_file_location('ev', Path(__file__).resolve().parents[1] / 'eval_chatbot.py')
+spec = importlib.util.spec_from_file_location('ev', Path(__file__).resolve().parents[1] / 'scripts' / 'eval_chatbot.py')
 ev = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ev)
 

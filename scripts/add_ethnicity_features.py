@@ -20,7 +20,7 @@ KEY INSIGHT:
   seat-level variation from national-level news signals.
 
 Usage:
-    python backend/scripts/add_ethnicity_features.py
+    python scripts/add_ethnicity_features.py
 """
 
 import pandas as pd

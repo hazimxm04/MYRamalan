@@ -5,8 +5,8 @@ Order of preference:
   1. the local copy in data/raw/  (reproducible, offline)
   2. download it from lake.electiondata.my and save it there (only if missing)
 
-To refresh after a new election:   python backend/scripts/download_data.py --refresh
-File names match backend/scripts/download_data.py and the pipeline config.
+To refresh after a new election:   python scripts/download_data.py --refresh
+File names match scripts/download_data.py and the pipeline config.
 """
 import sys
 from pathlib import Path
@@ -33,7 +33,7 @@ def _download(url, dest):
     except Exception as e:
         raise RuntimeError(
             f'No local copy at {dest} and could not download {url} '
-            f'({type(e).__name__}: {e}). Run backend/scripts/download_data.py '
+            f'({type(e).__name__}: {e}). Run scripts/download_data.py '
             f'when you have network access.') from e
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix('.tmp')

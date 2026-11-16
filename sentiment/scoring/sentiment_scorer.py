@@ -574,5 +574,5 @@ if __name__ == "__main__":
     print(f"\nPhase 2 scoring complete!")
     print(f"\nNext:")
     print(f"  1. Update add_ethnicity_features.py to use narrative themes")
-    print(f"  2. Retrain: python backend/scripts/train_models.py")
-    print(f"  3. Validate: python backend/scripts/validate_2026.py")
+    print(f"  2. Retrain: python scripts/train_models.py")
+    print(f"  3. Validate: python scripts/validation.py")

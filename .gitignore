@@ -66,3 +66,4 @@ eval/pool_v3_groq_cache_*.csv
 # Run logs
 backend/logs/
 mlops/logs/
+.venv/

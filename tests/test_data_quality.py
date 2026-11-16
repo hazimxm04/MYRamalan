@@ -1,7 +1,7 @@
 """
 Data-quality checks on the local election data (data/raw).
 A state is skipped if its files are not downloaded yet
-(run: python backend/scripts/download_data.py).
+(run: python scripts/download_data.py).
 
 These catch the problems we actually hit: renamed seats, missing winners,
 duplicate rows, a different number of seats between elections.
@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts'))
 
@@ -98,7 +98,7 @@ def test_training_ethnicity_file_exists_and_matches_the_seats(state):
     """Without this file the models silently train on zeros for 8 features."""
     year = STATES[state]['ethnicity_year']
     path = ROOT / 'data' / 'raw' / 'ethnicity' / f'ethnicity_{state}_{year}.csv'
-    assert path.exists(), f'missing {path.name} - run backend/scripts/download_ethnicity.py'
+    assert path.exists(), f'missing {path.name} - run scripts/download_ethnicity.py'
     eth = pd.read_csv(path)
     assert set(ETH_COLS) <= set(eth.columns)
     assert eth[ETH_COLS].notna().all().all()

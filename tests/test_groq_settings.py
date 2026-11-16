@@ -5,7 +5,7 @@ must be given enough tokens to finish their answer (a 100-token limit can cut it
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from sentiment.scoring import groq_settings as gs

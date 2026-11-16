@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from backend.core import sentiment_adjustment as sa
 
 REF = {'islam_threat': .10, 'malay_unity': .30, 'cost_living': .10, 'corruption': .10,

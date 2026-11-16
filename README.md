@@ -118,7 +118,7 @@ of further hyperparameter tuning. Full writeup:
 (majority change, turnout change, and similar) were computed from the election being predicted, so the model was partly
 shown the answer. Now every feature uses only the last election before the predicted one, and the one before that
 (`backend/core/features.py`), elections before 2004 are excluded because the seat counts differed, and seats are matched
-on their number (N.07) rather than their name. A test (`scripts/tests/test_no_outcome_leakage.py`) rewrites the predicted
+on their number (N.07) rather than their name. A test (`tests/test_no_outcome_leakage.py`) rewrites the predicted
 election and fails if any feature changes. The evaluation numbers above come from the fixed pipeline.
 
 **Why accuracy is no better than the simple rules while AUC is high.** The model ranks seats well (AUC 0.93 in Johor,
@@ -438,7 +438,7 @@ when predicting). Re-enabling them needs a retrain with real seat-level values:
 
 ![Tests](https://github.com/hazimxm04/GE-Insights-Prediction-Hub/actions/workflows/ci.yml/badge.svg)
 
-Run locally: `python -m pytest scripts/tests tests -k "not end_to_end"`
+Run locally: `python -m pytest tests -k "not end_to_end"`
 
 - `test_no_outcome_leakage.py`: rewrites the predicted election and checks that no feature changes, per feature, so a
   failure names the leaking feature. Also checks the features still respond to the last known election, that elections
@@ -461,7 +461,7 @@ Run locally: `python -m pytest scripts/tests tests -k "not end_to_end"`
   `test_eval_chatbot.py`: the agent's tools, loop, plan, guardrails, number check and the evaluation scorer, all tested
   without a model call.
 
-CI runs `scripts/tests` and `tests` on pushes to `main` and `fix/**` branches and on pull requests into `main`.
+CI runs `tests/` on pushes to `main` and `fix/**` branches and on pull requests into `main`.
 
 ---
 
@@ -496,16 +496,17 @@ scripts/
   tune_hyperparams.py      -- time-ordered settings comparison (current settings kept: gaps were within noise)
   freeze_forecasts.py      -- save a dated, checksummed forecast for states that have not voted; --verify checks it
   score_forecast.py        -- score a frozen forecast against the real result, next to the simple rules
-  tests/                   -- leakage, data-quality, training and predictor tests, run via CI
+  download_data.py         -- election data, driven by the state registry
+  download_ethnicity.py    -- voter-roll ethnicity files, driven by the registry
+  add_ethnicity_features.py -- demographic-weighted narrative features
+
+tests/                     -- all tests (leakage, data quality, training, predictor, API, agent), run via CI
 
 backend/
   core/features.py                 -- the single feature definition (no leakage)
   core/states.py                   -- registry of states and elections
   core/models/state_predictor.py   -- live prediction, OOD fallback
   models/{state}/                   -- trained models, versioned history, metadata
-  scripts/download_data.py         -- election data, driven by the state registry
-  scripts/download_ethnicity.py    -- voter-roll ethnicity files, driven by the registry
-  scripts/add_ethnicity_features.py -- demographic-weighted narrative features
 
 sentiment/
   scrapers/news_scraper.py         -- RSS scraping, 5 sources, per-source lean disclosed
@@ -631,10 +632,10 @@ pip install -r requirements.txt
 # GROQ_API_KEY=your_key_here
 
 # Download election data (local copies; add --refresh after a new election)
-python backend/scripts/download_data.py
+python scripts/download_data.py
 
 # Run the tests, including the no-leakage test
-python -m pytest scripts/tests tests -k "not end_to_end"
+python -m pytest tests -k "not end_to_end"
 
 # Train all 5 states (saves a held-out score per state)
 python scripts/train_models.py

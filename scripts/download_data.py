@@ -3,8 +3,8 @@
 Download election data (ballots + stats) for every state in the registry
 (backend/core/states.py) from electiondata.my into data/raw/.
 
-    python backend/scripts/download_data.py            # only what is missing
-    python backend/scripts/download_data.py --refresh  # re-download everything (after a new election)
+    python scripts/download_data.py            # only what is missing
+    python scripts/download_data.py --refresh  # re-download everything (after a new election)
 
 This is a thin wrapper around scripts/state_data.py, the one shared loader, so the file
 names and URLs are defined in one place. A refresh downloads to a temporary file first, so a
@@ -13,7 +13,7 @@ failed download never deletes the copy you already have.
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts'))
 
