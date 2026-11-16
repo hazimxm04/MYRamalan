@@ -603,7 +603,6 @@ data/
   (from 7.9 up to 731.9, medians 29 to 118) are on a different scale from the thresholds (1.0 and 2.5). It needs
   recalibrating.
 - **Theme classifier:** too few positives for govt_performance (14) and islam_threat (18) to judge any method.
-- **React dashboard (`frontend/`) is not connected:** it calls older `/api/...` routes that the current API does not have.
 - BN-PN coalition dynamics are election- and state-specific (see Key
   Finding above) — not yet modeled.
 - Sentiment-scoring pipeline (`sentiment_scorer.py`, via Groq)

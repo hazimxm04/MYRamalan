@@ -2,7 +2,7 @@
 app.py  (home page)
 ===================
 Structure:
-  1. Title + LIVE/OFFLINE badge (API health) + level toggle (State DUN / Parliament)
+  1. Title + LIVE badge + level toggle (State DUN / Parliament)
   2. Headline numbers (validated accuracy read from the validation CSVs, never typed in)
   3. Map of state seats: FORECAST ONLY. Map view = "Prediction" or "Prediction + sentiment".
      States without a forecast yet (today Johor, Negeri Sembilan) stay grey ("No forecast yet").
@@ -29,7 +29,6 @@ sys.path.insert(0, str(ROOT))
 
 from backend.core import sentiment_adjustment as sa
 from backend.core.frozen_forecast import latest_frozen, side_changes, result_changes
-from utils.api import health_check
 
 st.set_page_config(page_title="MYRamalan", page_icon="🗳️", layout="wide", initial_sidebar_state="expanded")
 
@@ -236,9 +235,8 @@ def fmt_delta(n: int) -> str:
 
 # ── 1. Title and level ──────────────────────────────────────────────────────────
 
-api_ok = health_check()      # LIVE once the API is deployed and reachable, OFFLINE until then
-status_class = "status-live" if api_ok else "status-offline"
-status_text = "🟢 LIVE" if api_ok else "🔴 OFFLINE"
+status_class = "status-live"     # the dashboard itself is the deployed app, so the badge is static
+status_text = "🟢 LIVE"
 
 st.markdown(f"""
 <div class="hero-container">

@@ -121,18 +121,20 @@ def test_feature_importance_johor():
     assert "feature_importance" in data
     features = data["feature_importance"]
     assert len(features) > 0
-    # First feature should be most important (sorted desc)
-    assert features[0]["importance"] >= features[-1]["importance"]
-    # majority_change should be top feature
-    assert features[0]["feature"] == "majority_change"
+    # Sorted from most to least important
+    imps = [f["importance"] for f in features]
+    assert imps == sorted(imps, reverse=True)
+    # The top feature changes whenever the model is retrained (it was majority_change before the ethnicity and
+    # leakage work, chinese_pct after), so only check that it is a named feature
+    assert features[0]["feature"]
 
 def test_ood_analysis_neg_sembilan():
-    """NS 2026 is 100% OOD (regime shift)"""
+    """NS 2026 is mostly OOD (regime shift): 29 of 36 seats, 80.6%, after the leakage fixes (it was 100% before)"""
     response = client.get("/analysis/ood/neg_sembilan")
     assert response.status_code == 200
     data = response.json()
-    assert data["ood_seats"]["percentage"] == 100.0
-    assert data["in_distribution_seats"]["count"] == 0
+    assert data["ood_seats"]["percentage"] > 75.0
+    assert data["ood_seats"]["count"] + data["in_distribution_seats"]["count"] == 36
 
 def test_ood_analysis_johor():
     """Johor has partial OOD (not full regime shift)"""

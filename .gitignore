@@ -43,23 +43,13 @@ chatbot/chroma_db/
 
 # Logs
 *.log
-venv311/
-__pycache__/
-*.pyc
 
 desktop.ini
 folderico-*.ico
 
 
-.env
 *.env
-__pycache__/
-*.pyc
 
-.env
-*.env
-__pycache__/
-*.pyc
 
 backend/models/*/v_*/
 backend/models/*/rejected_*/
@@ -72,3 +62,7 @@ finetune/data/
 *.safetensors
 *.pt
 eval/pool_v3_groq_cache_*.csv
+
+# Run logs
+backend/logs/
+mlops/logs/
