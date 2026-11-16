@@ -114,62 +114,13 @@ of further hyperparameter tuning. Full writeup:
 
 ## Other findings
 
-**Outcome leakage, found and fixed (second leak).** Separately from the sentiment leak below, some structural features
-(majority change, turnout change, and similar) were computed from the election being predicted, so the model was partly
-shown the answer. Now every feature uses only the last election before the predicted one, and the one before that
-(`backend/core/features.py`), elections before 2004 are excluded because the seat counts differed, and seats are matched
-on their number (N.07) rather than their name. A test (`tests/test_no_outcome_leakage.py`) rewrites the predicted
-election and fails if any feature changes. The evaluation numbers above come from the fixed pipeline.
+Short version (full write-ups in [docs/findings.md](docs/findings.md)):
 
-**Why accuracy is no better than the simple rules while AUC is high.** The model ranks seats well (AUC 0.93 in Johor,
-0.99 in Negeri Sembilan), but its accuracy is no better than the simple rules "never opposition" and "same as last
-time". Accuracy depends on the 0.5 probability cut-off, and because the training years include the 2018 opposition
-wave, the model over-predicts opposition wins in 2026: 12 of the 13 errors were false alarms. Next, I will choose the
-cut-off using only earlier elections, never the 2026 results, and add a per-seat feature for whether both BN and PN
-field candidates.
-
-**Pooled model across states, inconclusive.** One model trained on all five states (with a time-ordered test that never
-uses the test year or later) got more seats right in Selangor, Perak and Negeri Sembilan, fewer in Melaka, and about the
-same in Johor (`backend/models/pooled_results.json`). Seats in one election swing together, so there are far fewer
-independent observations than seats; no improvement is claimed.
-
-**Temporal leakage, found and fixed.** An earlier version of this
-pipeline included prediction-period (Aug 2026) sentiment scores as a
-*training* feature for transitions ending in 2013, 2018, and 2022 —
-using information that did not exist yet at the time of those
-elections. Fixed by splitting the feature set: training uses only
-structural + ethnicity features; sentiment/economic features are
-reserved for prediction time, where they are temporally valid.
-
-**3-class coalition split investigated, and reverted.** Tested
-splitting the target into BN / Pakatan / PN instead of binary. Found
-it underperforms: PN only emerged as a coalition in 2020, so no
-training transition has PN as a "previous" winner, and PN's seat
-count in its one possible training transition varies sharply by
-state (2 seats in Melaka vs. 26 in Perak) — a genuine data
-limitation, not a tuning problem (confirmed via GridSearchCV, which
-improved cross-validation scores but produced zero change in real
-validation accuracy). Reverted to binary; full investigation
-documented rather than discarded.
-
-**Voter-roll demographics provide genuine seat-level signal.**
-Ethnicity and age composition (`chinese_pct`, `young_malay_pct`,
-`youth_pct`, etc.), sourced from anonymised voter rolls, are
-consistently among the top features by importance across all 5
-states — this is real, seat-varying signal that structural features
-alone (majority change, turnout, incumbency) don't capture.
-
-**Sentiment/narrative features are national, weighted by
-demographics.** State-level sentiment scores are constant across all
-seats in a state (zero tree importance on their own). Weighting
-national narrative themes (e.g., "cost of living," "Islam threat")
-by each seat's demographic composition produces genuine seat-level
-variation — different seats respond differently to the same national
-narrative. This is an idea that is **not in the current models**: it was
-kept out of training to avoid the sentiment leakage described below, and
-the live predictor currently holds these inputs at 0. It needs a retrain
-with real seat-level values and a fair held-out test before any claim. A separate, assumption-based version that does not
-touch the models is described under *Experimental sentiment layer*.
+- **Outcome leakage and temporal leakage were both found and fixed**, and a test fails if either comes back.
+- **AUC is high but accuracy is no better than the simple rules**, because the 0.5 cut-off over-predicts opposition wins
+  (12 of the 13 errors in Johor and Negeri Sembilan were false alarms).
+- **A pooled model across states and a 3-class coalition split were tested and not adopted**; both are written up, not hidden.
+- **Voter-roll demographics give real seat-level signal.** State-level sentiment alone does not (it is constant across a state's seats).
 
 ---
 
@@ -490,79 +441,19 @@ CI runs `tests/` on pushes to `main` and `fix/**` branches and on pull requests 
 ## Project structure
 
 ```
-scripts/
-  training_config.py     -- transitions, shared model settings, feature lists
-  train_models.py         -- unified training pipeline (all 5 states), held-out score
-  validation.py            -- scores saved models on real results (johor, neg_sembilan)
-  evaluate_holdout.py      -- time-ordered test vs simple baselines, all states
-  evaluate_pooled.py       -- pooled vs per-state experiment
-  state_data.py            -- one shared data loader
-  check_state_years.py     -- prints years / seat counts per state
-  tune_hyperparams.py      -- time-ordered settings comparison (current settings kept: gaps were within noise)
-  freeze_forecasts.py      -- save a dated, checksummed forecast for states that have not voted; --verify checks it
-  score_forecast.py        -- score a frozen forecast against the real result, next to the simple rules
-  download_data.py         -- election data, driven by the state registry
-  download_ethnicity.py    -- voter-roll ethnicity files, driven by the registry
-  add_ethnicity_features.py -- demographic-weighted narrative features
-
-tests/                     -- all tests (leakage, data quality, training, predictor, API, agent), run via CI
-
-backend/
-  core/features.py                 -- the single feature definition (no leakage)
-  core/states.py                   -- registry of states and elections
-  core/models/state_predictor.py   -- live prediction, OOD fallback
-  models/{state}/                   -- trained models, versioned history, metadata
-
-sentiment/
-  scrapers/news_scraper.py         -- RSS scraping, 5 sources, per-source lean disclosed
-  scoring/sentiment_scorer.py      -- Groq scoring, national narrative themes
-  scoring/groq_settings.py         -- which Groq model to call and how (token limit for reasoning models)
-
-forecasts/<state>/<date>/          -- frozen forecasts: forecast.csv + manifest.json (never edited)
-
-finetune/                          -- headline classifier: build_pool.py, score_pool_groq.py, cross_validate.py, ...
-eval/                              -- hand-labelled headlines, pooled set, cross-validation results
-
-economic/
-  models/lstm_model.py              -- PyTorch LSTM, economic pressure score
-
-chatbot/
-  agent.py                          -- tool-choosing loop (max 6 model calls), trace, what_if_seat
-  tools.py                          -- read-only data tools over the frozen and validated files
-  planner.py                        -- optional plan-first step
-  guardrails.py                     -- input, tool-result and output checks (code, not prompt)
-  verifier.py                       -- every number in an answer must appear in a tool result
-  docs_search.py                    -- search_docs tool over knowledge_base/docs/*.md (no figures)
-  chain/, knowledge_base/builder.py -- older keyword chatbot (ChromaDB), kept for comparison
-
-eval/chatbot_questions.csv          -- 27 fixed questions for the agent
-scripts/eval_chatbot.py             -- runs them (old, router, agent, agent_verified, agent_planned)
-
-mlops/
-  model_versioning.py    -- held-out promotion gate, archiving
-  alerts.py                -- event logging + optional email/Slack
-  scheduler.py             -- APScheduler entry point
-  dags/
-    dag_sentiment.py       -- daily: scrape -> score -> update -> rebuild RAG
-    dag_economic.py        -- weekly: fetch -> LSTM -> pressure score
-    dag_drift.py            -- manual: post-election accuracy + drift check
-    dag_training.py         -- wraps train_models.py for scheduled/manual runs
-
-.github/workflows/
-  ci.yml                    -- leakage + training tests on push / pull request
-  scheduled-training.yml    -- monthly: refresh data, test, retrain, validate, open a PR
-
-docs/
-  leakage_fix.md            -- what leaked, how it was found, how the fix is tested
-  classifier_comparison.md  -- DistilBERT vs TF-IDF vs Groq zero-shot on 352 labelled headlines
-  multiclass_analysis.md    -- full investigation log: binary vs. 3-class target,
-                                sentiment-feature leakage analysis, BN-PN coalition
-                                finding, known issues and future work
-
-data/
-  raw/                       -- ballots, stats, ethnicity, news (parquet/CSV)
-  processed/                 -- sentiment scores, narrative scores, economic pressure
+backend/      features (one definition, no leakage), state registry, live predictor, trained models
+scripts/      data download, training, validation, baselines, frozen forecasts, agent evaluation
+tests/        all tests (leakage, data, training, predictor, API, agent), run in CI
+chatbot/      analyst agent: agent, tools, planner, guardrails, verifier, docs_search
+sentiment/    news scraping and Groq scoring (experimental layer)
+forecasts/    frozen forecasts (never edited)
+streamlit_app/  dashboard pages
+mlops/        model versioning, alerts, scheduled DAGs
+docs/         write-ups: leakage fix, classifier comparison, multiclass analysis, findings
+data/ eval/ finetune/ economic/   data, labelled headlines, classifier, LSTM score
 ```
+
+The full file-by-file listing is in [docs/project_structure.md](docs/project_structure.md).
 
 ---
 
@@ -666,7 +557,7 @@ uvicorn backend.app.main:app --port 8000
 
 # Or run the dashboard in a container (no Python setup needed)
 docker build -t myramalan .
-docker run --rm -p 8501:8501 -e GROQ_API_KEY=your_key_here myramalan   # then open http://localhost:8501 (details: Run with Docker below)
+docker run --rm -p 8501:8501 -e GROQ_API_KEY=your_key_here myramalan   # then open http://localhost:8501 (details: docs/running_with_docker.md)
 
 # Older keyword chatbot only (kept for the comparison): build its ChromaDB knowledge base
 python chatbot/knowledge_base/builder.py
@@ -683,27 +574,8 @@ docker build -t myramalan .
 docker run --rm -p 8501:8501 -e GROQ_API_KEY=your_key_here myramalan
 ```
 
-Then open http://localhost:8501. The first build takes a few minutes (it downloads the Python packages); later builds
-reuse the cached layers and only repeat the steps whose files changed. Stop the container with Ctrl+C.
-
-| What | How it is set up |
-|---|---|
-| Base image | `python:3.11-slim` |
-| Packages | `requirements.txt` only. The heavy optional packages (torch, chromadb, sentence-transformers, yfinance, apscheduler) are not installed |
-| XGBoost | Installed as `xgboost-cpu` (same 2.1.1 release, without the large GPU library); the app only predicts on CPU |
-| User | Runs as a normal user (`appuser`), not root |
-| Port and health | Serves on 8501; a health check calls Streamlit's `/_stcore/health` |
-| Secrets | The Groq key is passed when the container starts (`-e GROQ_API_KEY=...`). It is never copied into the image: `.env` files are excluded by `.dockerignore` |
-| Contents | The code, the trained models, the frozen forecasts and the processed data, as they are in the repo at build time. Rebuild the image after retraining or refreshing data |
-
-What the container does **not** do:
-
-- It runs the dashboard only. The FastAPI service (`uvicorn backend.app.main:app`) is not started in it.
-- The chatbot page needs `GROQ_API_KEY`. Without it, the pages that do not call the model still work.
-- The older ChromaDB chatbot and the LSTM economic score need the optional packages, so they are unavailable in the container.
-- It is not a hosted demo. It runs on your machine.
-
-Built and run locally; all pages load. In PowerShell, run the two commands exactly as written above (one line each).
+Then open http://localhost:8501. Setup details and what the container does not do are in
+[docs/running_with_docker.md](docs/running_with_docker.md).
 
 ---
 
