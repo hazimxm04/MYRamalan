@@ -5,7 +5,7 @@ Score a FROZEN forecast against the real election result.
 
 Run this after a state has voted and its new results are in data/raw/:
 
-    python backend/scripts/download_data.py --refresh        # get the new election
+    python scripts/download_data.py --refresh        # get the new election
     python scripts/score_forecast.py selangor                # latest frozen folder
     python scripts/score_forecast.py selangor --date 2026-10-30 --save
 

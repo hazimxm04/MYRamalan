@@ -150,7 +150,7 @@ def task_retrain_if_needed(drift_result: dict) -> dict:
 
         result = subprocess.run(
             [sys.executable,
-             str(ROOT / "backend/scripts/train_models.py")],
+             str(ROOT / "scripts/train_models.py")],
             capture_output=True, text=True, cwd=str(ROOT)
         )
 

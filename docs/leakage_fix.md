@@ -18,7 +18,7 @@ script, the live predictor and the chatbot baseline.
 - Evaluation is time-ordered and compared with two simple rules ("never opposition", "same as last time").
 
 ## How it is checked
-`scripts/tests/test_no_outcome_leakage.py` rewrites election B (random results) and fails if any feature changes.
+`tests/test_no_outcome_leakage.py` rewrites election B (random results) and fails if any feature changes.
 Training saves its held-out score in `metadata.json`; validation refuses models built with the old features.
 
 ## Result

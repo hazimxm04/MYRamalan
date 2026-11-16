@@ -13,7 +13,7 @@ These become SEAT-LEVEL features for Phase 1 election predictor:
   median_age        (median age of registered voters)
 
 Usage:
-    python backend/scripts/download_ethnicity.py
+    python scripts/download_ethnicity.py
 """
 
 import sys
@@ -22,7 +22,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend.core.states import STATES, voter_roll_url
 
@@ -160,4 +160,4 @@ if __name__ == "__main__":
             print(f"  {col:<22}: "
                   f"{combined[col].min():.3f} to {combined[col].max():.3f}")
 
-        print(f"\nNext: python backend/scripts/add_ethnicity_features.py")
+        print(f"\nNext: python scripts/add_ethnicity_features.py")
